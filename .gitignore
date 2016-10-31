@@ -1,0 +1,4 @@
+*.dat
+*.swp
+figure
+__pycache__
