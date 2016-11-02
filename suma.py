@@ -6,7 +6,7 @@ class SumaSmall(cma.CMAEvolutionStrategy):
 #TODO check whether x0 is copy of obj or not
     def __init__(self, x0, sigma0, inopts, suma_inopts):
         inopts['CMA_diagonal'] = False
-        inopts['AdaptSigma'] = False
+#        inopts['AdaptSigma'] = False
         #inopts['CMA_eigenmethod'] = cma.Misc.eig
         
         inopts['verb_filenameprefix'] = inopts['verb_filenameprefix'] + 'Small';
@@ -21,13 +21,13 @@ class SumaSmall(cma.CMAEvolutionStrategy):
 
 #TODO does not work; must be before calling super so check if exists in inopts an if not take default intead plus Small
 #TODO EDIT better: inherit CMAOptions in way to set SUMA variables
-        self.opts['verb_filenameprefix'] = self.opts['verb_filenameprefix'] + 'Small';
+#        self.opts['verb_filenameprefix'] = self.opts['verb_filenameprefix'] + 'Small';
 
         self.inopts = {**self.inopts, **suma_inopts};
         self.opts = {**self.opts, **suma_opts};
 
         #test 
-        self._first_identity = True;
+#        self._first_identity = True;
         #self.gp.isidentity = False
 
     @staticmethod
@@ -75,8 +75,8 @@ class SumaSmall(cma.CMAEvolutionStrategy):
                     score_bs = self.relativeProba(candidates[i]);
             return best_seen;
 
-    def store_candidates(self, big_candidates):
-        self._tmp_candidates = np.transpose(self._random_projection @ np.transpose(big_candidates));
+#    def store_candidates(self, big_candidates):
+#        self._tmp_candidates = np.transpose(self._random_projection @ np.transpose(big_candidates));
 
     def begin_iteration(self):
 #        self._flgtelldone = False;
@@ -88,55 +88,18 @@ class SumaSmall(cma.CMAEvolutionStrategy):
         #    self._first_identity = False;
         #    self._savedC = self.C;
 
-        self._tmp_candidates = None;
+#        self._tmp_candidates = None;
         self.Csi = np.dot(self.B, (self.B / self.D).T)  # square root of inverse of C according to cma.py update_exponential
 
-    # ____________________________________________________________
-    # ____________________________________________________________
-    def ask_geno(self, number=None, xmean=None, sigma_fac=1):
-        #TODO: document it
-        """get new candidate solutions in genotyp, sampled from a
-        multi-variate normal distribution.
+    def askBigDim(self, number):
+        return super().ask(number) @ self._random_projection;
+        #return (super().ask(number) - self.mean * number) @ self._random_projection;
 
-        Arguments are
-            `number`
-                number of returned solutions, by default the
-                population size `popsize` (AKA lambda).
-            `xmean`
-                distribution mean
-            `sigma_fac`
-                multiplier for internal sample width (standard
-                deviation)
-
-        `ask_geno` returns a list of N-dimensional candidate solutions
-        in genotyp representation and is called by `ask`.
-
-        Details: updates the sample distribution and might change
-        the geno-pheno transformation during this update.
-
-        :See: `ask`, `ask_and_eval`
-
-        """
-        # update distribution, might change self.mean
-        if self.sp.CMA_on and (
-                (self.opts['updatecovwait'] is None and
-                 self.countiter >=
-                     self.itereigenupdated + 1. / (self.sp.c1 + self.sp.cmu) / self.N / 10
-                 ) or
-                (self.opts['updatecovwait'] is not None and
-                 self.countiter > self.itereigenupdated + self.opts['updatecovwait']
-                 ) or
-                (self.sp.neg.cmuexp * (self.countiter - self.itereigenupdated) > 0.5
-                )  # TODO (minor): not sure whether this is "the right" criterion
-            ):
-            self.updateBD()
-
-        if self._flgtelldone:  # could be done in tell()!?
-            self._flgtelldone = False
-
-        self.evaluations_per_f_value = 1
-
-        return self._tmp_candidates;
+    def prj(self, vectors, inBigDim = False):
+        if inBigDim:
+            return vectors @ np.transpose(self._random_projection) @ self._random_projection;
+        else:
+            return vectors @ np.transpose(self._random_projection);
 
 #    def end_iteration(self):
 #            self._flgtelldone = False
@@ -179,16 +142,18 @@ class Suma(cma.CMAEvolutionStrategy):
             number = self.sp.popsize;
         
         #pop = np.matrix();
-        pop = np.ndarray(shape=(number, self.N));
         self._smallstrat.begin_iteration();
+        pop = super().ask_geno(number);
+        pop = pop - self._smallstrat.prj(pop, True) + self._smallstrat.askBigDim(number);
+#        pop = np.ndarray(shape=(number, self.N));
 
-        for i in range(number):
+#        for i in range(number):
 #TODO see EDIT above
 #TODO check if param exist
-            candidates = super().ask_geno(self.opts['SUMA_k']);
-            pop[i] = self._smallstrat.bestCandidate(candidates);
+#            candidates = super().ask_geno(self.opts['SUMA_k']);
+#            pop[i] = self._smallstrat.bestCandidate(candidates);
 
-        self._smallstrat.store_candidates(pop);
+#        self._smallstrat.store_candidates(pop);
 
         return pop;
 
@@ -199,7 +164,7 @@ class Suma(cma.CMAEvolutionStrategy):
        #     print(Psolutions[i])
         #    print(self._smallstrat._random_projection.dot(solutions[i]))
         #self._smallstrat.tell(Psolutions, function_values, check_points, copy);
-        self._smallstrat.tell(self._smallstrat.ask(), function_values, check_points, copy);
+        self._smallstrat.tell(self._smallstrat.prj(solutions), function_values, check_points, copy);
         super().tell(solutions, function_values, check_points, copy);
         #put in optimize
         self._smallstrat.logger.add(self._smallstrat);
