@@ -27,7 +27,7 @@ class SumaSmall(cma.CMAEvolutionStrategy):
         self.opts = {**self.opts, **suma_opts};
 
         #test 
-        self._first_identity = True;
+        #self._first_identity = True;
         #self.gp.isidentity = False
 
     @staticmethod
@@ -76,7 +76,7 @@ class SumaSmall(cma.CMAEvolutionStrategy):
             return best_seen;
 
     def store_candidates(self, big_candidates):
-        self._tmp_candidates = np.transpose(self._random_projection @ np.transpose(big_candidates));
+        self._tmp_candidates = big_candidates @ np.transpose(self._random_projection);
 
     def begin_iteration(self):
 #        self._flgtelldone = False;
@@ -158,6 +158,8 @@ class Suma(cma.CMAEvolutionStrategy):
         #we do not need to copy inopts because it is not modified by CMAEvolutionStrategy.__init__()
 #        self._smallstrat = SumaSmall(x0, sigma0, copy.copy(inopts), suma_inopts);
         self._smallstrat = SumaSmall(x0, 1.0, copy.copy(inopts), suma_inopts);
+        #put in optimize
+        self._smallstrat.logger.add(self._smallstrat);
 
         inopts['CMA_diagonal'] = True;
 
@@ -201,6 +203,4 @@ class Suma(cma.CMAEvolutionStrategy):
         #self._smallstrat.tell(Psolutions, function_values, check_points, copy);
         self._smallstrat.tell(self._smallstrat.ask(), function_values, check_points, copy);
         super().tell(solutions, function_values, check_points, copy);
-        #put in optimize
-        self._smallstrat.logger.add(self._smallstrat);
 
