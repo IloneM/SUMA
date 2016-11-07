@@ -158,8 +158,6 @@ class Suma(cma.CMAEvolutionStrategy):
         #we do not need to copy inopts because it is not modified by CMAEvolutionStrategy.__init__()
 #        self._smallstrat = SumaSmall(x0, sigma0, copy.copy(inopts), suma_inopts);
         self._smallstrat = SumaSmall(x0, 1.0, copy.copy(inopts), suma_inopts);
-        #put in optimize
-        self._smallstrat.logger.add(self._smallstrat);
 
         inopts['CMA_diagonal'] = True;
 
@@ -203,4 +201,6 @@ class Suma(cma.CMAEvolutionStrategy):
         #self._smallstrat.tell(Psolutions, function_values, check_points, copy);
         self._smallstrat.tell(self._smallstrat.ask(), function_values, check_points, copy);
         super().tell(solutions, function_values, check_points, copy);
+        #TODO #notUrgent: rewrite optimize in way to call logger of smallstrat
+        self._smallstrat.logger.add(self._smallstrat);
 
