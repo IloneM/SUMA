@@ -173,11 +173,6 @@ class Suma(cma.CMAEvolutionStrategy):
             suma_inopts[key] = inopts.pop(key, None);
         return suma_inopts;
 
-#    def optimize(self, objective_fct, iterations=None, min_iterations=1, args=(), verb_disp=None, logger=None, call_back=None):
-#        self._smallstrat.logger.add(self._smallstrat);
-#        super().optimize(objective_fct, iterations, min_iterations, args, verb_disp, logger, call_back);
-
-
 #    def ask(self, number=None, xmean=None, sigma_fac=1, gradf=None, args=()):
     def ask_geno(self, number=None, xmean=None, sigma_fac=1):
         if number is None or number < 1: 
@@ -204,7 +199,7 @@ class Suma(cma.CMAEvolutionStrategy):
        #     print(Psolutions[i])
         #    print(self._smallstrat._random_projection.dot(solutions[i]))
         #self._smallstrat.tell(Psolutions, function_values, check_points, copy);
-        self._smallstrat.logger.add(self._smallstrat);
         self._smallstrat.tell(self._smallstrat.ask(), function_values, check_points, copy);
         super().tell(solutions, function_values, check_points, copy);
+        self._smallstrat.logger.add(self._smallstrat);
 
