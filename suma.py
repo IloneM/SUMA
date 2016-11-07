@@ -158,8 +158,6 @@ class Suma(cma.CMAEvolutionStrategy):
         #we do not need to copy inopts because it is not modified by CMAEvolutionStrategy.__init__()
 #        self._smallstrat = SumaSmall(x0, sigma0, copy.copy(inopts), suma_inopts);
         self._smallstrat = SumaSmall(x0, 1.0, copy.copy(inopts), suma_inopts);
-        #put in optimize
-        self._smallstrat.logger.add(self._smallstrat);
 
         inopts['CMA_diagonal'] = True;
 
@@ -174,6 +172,11 @@ class Suma(cma.CMAEvolutionStrategy):
         for key in suma_keys:
             suma_inopts[key] = inopts.pop(key, None);
         return suma_inopts;
+
+#    def optimize(self, objective_fct, iterations=None, min_iterations=1, args=(), verb_disp=None, logger=None, call_back=None):
+#        self._smallstrat.logger.add(self._smallstrat);
+#        super().optimize(objective_fct, iterations, min_iterations, args, verb_disp, logger, call_back);
+
 
 #    def ask(self, number=None, xmean=None, sigma_fac=1, gradf=None, args=()):
     def ask_geno(self, number=None, xmean=None, sigma_fac=1):
@@ -201,6 +204,7 @@ class Suma(cma.CMAEvolutionStrategy):
        #     print(Psolutions[i])
         #    print(self._smallstrat._random_projection.dot(solutions[i]))
         #self._smallstrat.tell(Psolutions, function_values, check_points, copy);
+        self._smallstrat.logger.add(self._smallstrat);
         self._smallstrat.tell(self._smallstrat.ask(), function_values, check_points, copy);
         super().tell(solutions, function_values, check_points, copy);
 
