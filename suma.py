@@ -3,15 +3,12 @@ import cma
 
 class Suma(cma.CMAEvolutionStrategy):
     def __init__(self, x0, sigma0, inopts={}):
-        suma_inopts = self.extract_suma_inopts(inopts)
-        suma_opts = suma_inopts
+        self.suma_opts = self.extract_suma_inopts(inopts)
 
         inopts['CMA_diagonal'] = True
 
-        super().__init__(x0, sigma0, inopts)
+        super(Suma, self).__init__(x0, sigma0, inopts)
 
-        self.inopts = {**self.inopts, **suma_inopts}
-        self.opts = {**self.opts, **suma_opts}
         self._f = None
 
     def extract_suma_inopts(self, inopts):
@@ -27,7 +24,7 @@ class Suma(cma.CMAEvolutionStrategy):
         pop = np.ndarray(shape=(number, self.N))
 
         for i in range(number):
-            candidates = super().ask_geno(self.opts['SUMA_k'])
+            candidates = super(Suma, self).ask_geno(self.suma_opts['SUMA_k'])
 
             if len(candidates) < 1:
                 raise cma._Error('candidates vector cannot be empty')
@@ -47,10 +44,10 @@ class Suma(cma.CMAEvolutionStrategy):
     def tell(self, solutions, function_values, check_points=None, copy=False):
         s = np.mean(self.C)
         self.C /= s
-        super().tell(solutions, function_values, check_points, copy)
+        super(Suma, self).tell(solutions, function_values, check_points, copy)
 
     def optimize(self, objective_fct, iterations=None, min_iterations=1,
                  args=(), verb_disp=None, logger=None, call_back=None):
         self._f = objective_fct
-        return super().optimize(objective_fct, iterations, min_iterations, args, verb_disp, logger, call_back)
+        return super(Suma, self).optimize(objective_fct, iterations, min_iterations, args, verb_disp, logger, call_back)
 
