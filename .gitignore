@@ -1,4 +1,6 @@
 *.dat
 *.swp
 figure
+results
+trash
 __pycache__
