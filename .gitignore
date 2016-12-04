@@ -1,5 +1,6 @@
 *.dat
 *.swp
+*.pyc
 figure
 results
 trash
