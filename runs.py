@@ -16,7 +16,7 @@ runsqueue = [(len(ks), len(dims), len(funcs), nb_test)] * (comm.Get_size()-1)#be
 
 if isfile('current_run.dat'):
     lrnf = eval(open('current_run.dat', 'r').read())#last run not finished
-else
+else:
     lrnf = (0, 0, 0, 0)
 
 if rank == 0:
