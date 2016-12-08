@@ -26,7 +26,7 @@ if rank == 0:
                 for test in range(nb_test):
                     if((k, d, f, test) < lrnf):
                         continue#because changing vars directly has no effect on for loops; Note: this is a tricky and ugly workaround!!
-                    runner = comm.recv(tag=0)
+                    runner = comm.recv(tag=0, source=MPI.ANY_SOURCE)
                     run_data = {'ki': k, 'di': d, 'fi': f, 'ti': test}
                     comm.send(run_data, dest=runner, tag=1)
                     print("running test %d/%d for k=%d d=%d f=%s" % (test+1, nb_test, ks[k], dims[d], funcs[f].__name__))
@@ -37,7 +37,7 @@ if rank == 0:
                         open('current_run.dat', 'w').write(str(lrnf))
 
     for i in range(comm.Get_size()-1):
-        runner = comm.recv(tag=0)
+        runner = comm.recv(tag=0, source=MPI.ANY_SOURCE)
         comm.send(False, dest=runner, tag=1)
 
         runsqueue[runner-1] = (len(ks), len(dims), len(funcs), nb_test)
