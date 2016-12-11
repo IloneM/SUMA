@@ -5,4 +5,4 @@ then
 else
 	np=$1
 fi
-mpirun -np $np python2.7 runs.py
+mpirun -np $np python2.7 run.py

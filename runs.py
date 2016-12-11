@@ -3,6 +3,7 @@ import cma
 from mpi4py import MPI
 from inspect import getargspec
 from os.path import isfile
+from future.utils import iteritems
 
 ks = [1, 2, 5, 10, 20, 50]
 dims = [50, 100, 200, 500, 1000, 5000, 10000]
