@@ -31,10 +31,10 @@ class Suma(cma.CMAEvolutionStrategy):
             else:
                 best_seen = candidates[0]
                 score_bs = self._f(best_seen)
-                for i in range(1, len(candidates)):
-                    cs = self._f(candidates[i])
+                for j in range(1, len(candidates)):
+                    cs = self._f(candidates[j])
                     if cs < score_bs:
-                        best_seen = candidates[i]
+                        best_seen = candidates[j]
                         score_bs = cs
 
             pop[i] = best_seen
