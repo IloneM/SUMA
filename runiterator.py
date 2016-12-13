@@ -15,8 +15,8 @@ class RunIterator():
             raise StopIteration
         self.ended = True
         res = tuple(self.current)
-#        for i in range(len(self._bounds)-1, -1, -1):
-        for i in range(len(self._bounds)):
+        for i in range(len(self._bounds)-1, -1, -1):
+#        for i in range(len(self._bounds)): dont use this because lexico order is not respected in that case
             if self.current[i] < self._bounds[i]-1:
                 self.current[i] += 1
                 self.ended = False
@@ -34,8 +34,8 @@ def runGen(bounds, start = None):
     while not ended:
         ended = True
         res = tuple(current)
-#        for i in range(len(bounds)-1, -1, -1):
-        for i in range(len(bounds)):
+        for i in range(len(bounds)-1, -1, -1):
+#        for i in range(len(bounds)): dont use this because lexico order is not respected in that case
             if current[i] < bounds[i]-1:
                 current[i] += 1
                 ended = False

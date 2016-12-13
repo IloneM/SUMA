@@ -16,6 +16,7 @@ def doWork(k, dim, func):
     ests = suma.Suma([0.5] * dim, 0.5,
                      {'SUMA_k': k,
                       'verb_disp': 0,
+                      'verb_log': 100,
                       'verb_filenameprefix': "suma_oracle_k=%d_d=%d_f=%s_" %
                                              (k, dim, func.__name__)})
     if 'rot' in getargspec(func)[0]:
