@@ -17,7 +17,7 @@ def launch(runparameters, workfunc=lambda *args, **kwargs: None, runfile='curren
         #runparameterslst = list(list(itervalues(v)) if type(v) == dict else list(v) for v in itervalues(runparameters))
         #runparameterbounds = tuple(len(iterable) for iterable in runparameterslst)
         runparameterkeys = tuple(k for k in iterkeys(runparameters))
-        runparameterbounds = tuple(len(list(iterable)) for iterable in runparameters)
+        runparameterbounds = tuple(len(list(iterable)) for iterable in itervalues(runparameters))
 
         runsqueue = [runparameterbounds] * (comm.Get_size()-1)#because first is master and does not work
 
