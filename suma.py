@@ -32,7 +32,7 @@ class Suma(cma.CMAEvolutionStrategy):
                 best_seen = candidates[0]
                 score_bs = self._f(best_seen)
                 for j in range(1, len(candidates)):
-                    cs = self._f(candidates[j])
+                    cs = max(self._f(candidates[j]) * (1 + np.random.randn() * self.suma_opts['SUMA_noise']), 1e-19)
                     if cs < score_bs:
                         best_seen = candidates[j]
                         score_bs = cs
