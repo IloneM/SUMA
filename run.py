@@ -17,7 +17,7 @@ def doWork(k, dim, func, noise, test):
                       'SUMA_noise': noise,
                       'verb_disp': 0,
                       'verb_log': 100,
-                      'verb_filenameprefix': "suma_oracle_k=%d_d=%d_f=%s_noise=%.1f_%d_" %
+                      'verb_filenameprefix': "SUMA-noisy-data/suma_oracle_k=%d_d=%d_f=%s_noise=%.1f_%d_" %
                                              (k, dim, func.__name__, noise, test)})
     if 'rot' in getargspec(func)[0]:
         ests.optimize(func, args=(1,))
