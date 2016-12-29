@@ -30,7 +30,7 @@ class Suma(cma.CMAEvolutionStrategy):
                 raise cma._Error('candidates vector cannot be empty')
             else:
                 best_seen = candidates[0]
-                score_bs = self._f(best_seen)
+                score_bs = max(self._f(best_seen) * (1 + np.random.randn() * self.suma_opts['SUMA_noise']), 1e-19)
                 for j in range(1, len(candidates)):
                     cs = max(self._f(candidates[j]) * (1 + np.random.randn() * self.suma_opts['SUMA_noise']), 1e-19)
                     if cs < score_bs:
