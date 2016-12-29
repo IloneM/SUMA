@@ -3,14 +3,20 @@ import stdrun
 
 nbTest = 15
 suffix = "fit.dat"
-path_prefix = "/home/ilone/Documents/Studies/Recherche/sumapy/data-14-12/SUMA-14-12-data/"
-path_prefix2 = "/home/ilone/Documents/Studies/Recherche/sumapy/data-14-12/"
+path_prefix = "/home/ilone/Documents/Studies/Recherche/sumapy/data-std/SUMA-14-12-data/"
+path_prefix2 = "/home/ilone/Documents/Studies/Recherche/sumapy/data-std/"
 
 runparameters = {'ks': [2, 5, 10],
                  'dims' : [50, 100, 500],
                  'funcs' : [cma.fcts.cigar, cma.fcts.tablet, cma.fcts.elli, cma.fcts.diffpow,
                             cma.fcts.rosen],
                 }
+
+#runparameters = {'ks': [2, 5],
+#                 'dims' : [500],
+#                 'funcs' : [cma.fcts.tablet, cma.fcts.elli, cma.fcts.diffpow,
+#                            cma.fcts.rosen],
+#                }
 
 def doWork(k, dim, func):
     fw = open(path_prefix2 + "suma_oracle_k=%d_d=%d_f=%s.dat" % (k, dim, func.__name__), 'w')
