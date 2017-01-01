@@ -5,7 +5,11 @@ class RunIterator():
         #TODO       raise + verif if in bounds
         self._bounds = bounds
         self.current = [0] * len(bounds) if start is None else list(start)
-        self.ended = len(bounds) <= 0 or min(bounds) <= 0 or (start is not None and len(start) is not len(bounds))
+#        self.ended = len(bounds) <= 0 or min(bounds) <= 0 or (start is not None and len(start) is not len(bounds))
+        self.ended = len(bounds) <= 0 or min(bounds) <= 0 or \
+                                         (start is not None and \
+                                         (len(start) is not len(bounds) or \
+                                          [i for i in range(len(bounds)) if start[i] >= bounds[i]]))
     def __iter__(self):
         return self
     def __next__(self):
@@ -30,7 +34,11 @@ def runGen(bounds, start = None):
     #   if not len(start) == len(bounds):
     #TODO       raise + verif if in bounds
     current = [0] * len(bounds) if start is None else list(start)
-    ended = len(bounds) <= 0 or min(bounds) <= 0 or (start is not None and len(start) is not len(bounds))
+    ended = len(bounds) <= 0 or min(bounds) <= 0 or \
+                                (start is not None and \
+                                (len(start) is not len(bounds) or \
+                                 [i for i in range(len(bounds)) if start[i] >= bounds[i]]))
+
     while not ended:
         ended = True
         res = tuple(current)
