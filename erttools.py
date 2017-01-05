@@ -13,6 +13,7 @@ class ERTManagerForWorkers:
         self.resultsforert = {}
         self.nbprecs = len(precs)
         self.opts = copy.copy(opts)
+        self.runparams = runparams
 
     def storedata(self, es):
         newf = es.fit.fit[0]
@@ -31,7 +32,7 @@ class ERTManagerForWorkers:
     def done(self, es):
         return self.currentprecit == self.nbprecs
 
-    def sendresults(self):
-        return self.resultsforert
-        #comm.send({'func': func.__name__, 'k': k, 'd': dim, 'erts': ERT}, dest=1, tag=2)
+    def sendresults(self, comm, dest=1, tag=2):
+        comm.send((self.runparams, self.resultsforert), dest=dest, tag=tag)
+#        return self.resultsforert
 

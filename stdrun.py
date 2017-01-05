@@ -38,8 +38,9 @@ def launch(runparameters, workfunc=lambda *args, **kwargs: None, opts={}):
 
         for it in runGen(runparameterbounds, lrnf):
             runner = comm.recv(tag=0, source=MPI.ANY_SOURCE)
-            run_data = {runparameterkeys[i]: it[i] for i in range(len(runparameters))}
-            comm.send(run_data, dest=runner, tag=1)
+            comm.send(it, dest=runner, tag=1)
+#           run_data = {runparameterkeys[i]: it[i] for i in range(len(runparameters))}
+#           comm.send(run_data, dest=runner, tag=1)
 
             runsqueue[runner] = it
             if lrnf < min(itervalues(runsqueue)):
@@ -86,9 +87,11 @@ def launch(runparameters, workfunc=lambda *args, **kwargs: None, opts={}):
             while True:
                 comm.send(rank, dest=0, tag=0)
                 data = comm.recv(source=0, tag=1)
+#           run_data = {runparameterkeys[i]: it[i] for i in range(len(runparameters))}
                 if not data:
                     break
-                data = {k[:-1]: runparameters[k][v] for k, v in iteritems(data)}
+                #data = {k[:-1]: runparameters[k][v] for k, v in iteritems(data)}
+                data = {runparameterkeys[i][:-1]: runparameters[runparameterkeys[i]][data[i]] for i in range(len(data))}
                 workfunc(**data)
         else:
             #you may consider putting special behaviours in this func
