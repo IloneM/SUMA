@@ -1,4 +1,4 @@
-from inspect import getargspec
+from inspect import getfullargspec
 from mpi4py import MPI
 import suma
 import cma
@@ -24,7 +24,7 @@ def doWork(k, dim, func, test):
 #                     'verb_log': 100,
 #                     'verb_filenameprefix': "suma_oracle_k=%d_d=%d_f=%s_%d_" %
 #                                            (k, dim, func.__name__, test)})
-#   if 'rot' in getargspec(func)[0]:
+#   if 'rot' in getfullargspec(func)[0]:
 #       ests.optimize(func, args=(1,))
 #   else:
 #       ests.optimize(func)

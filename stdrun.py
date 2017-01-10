@@ -5,11 +5,12 @@ from six import iteritems,itervalues,iterkeys
 from runiterator import runGen
 from collections import OrderedDict
 from hashlib import md5
+from inspect import getfullargspec
 
 #TODO implement differenciation between worker and others with mpi communicators and broadcast
 
 def launch(runparameters, workfunc=lambda *args, **kwargs: None, opts={}):
-    defopts = {'stdbehaviour': True, 'specialbehaviour': workfunc}
+    defopts = {'stdbehaviour': True, 'specialbehaviour': workfunc}#, 'workfunc_needrawdata': False}
     defopts.update(opts)
     opts = defopts
 
@@ -91,8 +92,13 @@ def launch(runparameters, workfunc=lambda *args, **kwargs: None, opts={}):
                 if not data:
                     break
                 #data = {k[:-1]: runparameters[k][v] for k, v in iteritems(data)}
+                rawdata = data
                 data = {runparameterkeys[i][:-1]: runparameters[runparameterkeys[i]][data[i]] for i in range(len(data))}
-                workfunc(**data)
+                if 'rawdata' in getfullargspec(workfunc)[0]:
+                    workfunc(**data, rawdata=rawdata)
+                else:
+                    workfunc(**data)
+                    
         else:
             #you may consider putting special behaviours in this func
             opts['specialbehaviour']()

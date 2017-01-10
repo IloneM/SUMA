@@ -4,16 +4,15 @@ from mpi4py import MPI
 import copy
 
 class ERTManagerForWorkers:
-    def __init__(self, runparams, precs, inopts={'intrusivestop': True}):
-        self.cr = currentRun#must be dict as {'k': 0.3, test: 3, ..}
-        self.precs = copy.copy(precs);
+    def __init__(self, currentrun, precs, inopts={'intrusivestop': True}):
+        self.cr = currentrun#must be dict as {'k': 0.3, test: 3, ..}
+        self.precs = precs
         self.workprecs = [10 ** (-prec) for prec in precs]
         self.lastfcteval = 0
         self.currentprecit = 0
         self.resultsforert = {}
         self.nbprecs = len(precs)
-        self.opts = copy.copy(opts)
-        self.runparams = runparams
+        self.opts = inopts
 
     def storedata(self, es):
         newf = es.fit.fit[0]
@@ -33,6 +32,6 @@ class ERTManagerForWorkers:
         return self.currentprecit == self.nbprecs
 
     def sendresults(self, comm, dest=1, tag=2):
-        comm.send((self.runparams, self.resultsforert), dest=dest, tag=tag)
+        comm.send((self.cr, self.resultsforert), dest=dest, tag=tag)
 #        return self.resultsforert
 
