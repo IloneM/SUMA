@@ -65,3 +65,6 @@ def computeERT(precs, data):
 
     return ERT
 
+def storeERP():
+    pass
+    #idea: send str which is the key to look for in the dict sent as "rawdata" and then store data in splited files (splited according to a list of keys used for splitting e.g.) and then store the others as in compute_ert and use a specific path and put all this in the opt dict used in stdrun main funct and modify stdrun in way to send this stored datas to the stdbehaviour

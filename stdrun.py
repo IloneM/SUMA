@@ -7,7 +7,7 @@ from collections import OrderedDict
 from hashlib import md5
 from inspect import getfullargspec
 
-#TODO implement differenciation between worker and others with mpi communicators and broadcast
+#TODO implement differenciation between worker and others with mpi communicators and broadcast (dict of workers)
 #TODO implement consistent manager for tags
 
 def launch(runparameters, workfunc=lambda *args, **kwargs: None, opts={}):
