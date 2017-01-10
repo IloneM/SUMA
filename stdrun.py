@@ -5,8 +5,10 @@ from six import iteritems,itervalues,iterkeys
 from runiterator import runGen
 from collections import OrderedDict
 from hashlib import md5
+from inspect import getfullargspec
 
 #TODO implement differenciation between worker and others with mpi communicators and broadcast
+#TODO implement consistent manager for tags
 
 def launch(runparameters, workfunc=lambda *args, **kwargs: None, opts={}):
     defopts = {'stdbehaviour': True, 'specialbehaviour': workfunc}
@@ -86,13 +88,16 @@ def launch(runparameters, workfunc=lambda *args, **kwargs: None, opts={}):
         if behavestd:
             while True:
                 comm.send(rank, dest=0, tag=0)
-                data = comm.recv(source=0, tag=1)
+                rawdata = comm.recv(source=0, tag=1)
 #           run_data = {runparameterkeys[i]: it[i] for i in range(len(runparameters))}
-                if not data:
+                if not rawdata:
                     break
                 #data = {k[:-1]: runparameters[k][v] for k, v in iteritems(data)}
-                data = {runparameterkeys[i][:-1]: runparameters[runparameterkeys[i]][data[i]] for i in range(len(data))}
-                workfunc(**data)
+                data = {runparameterkeys[i][:-1]: runparameters[runparameterkeys[i]][rawdata[i]] for i in range(len(rawdata))}
+                if 'rawdata' in getfullargspec(workfunc)[0]:
+                    workfunc(**data, rawdata=rawdata)
+                else:
+                    workfunc(**data)
         else:
             #you may consider putting special behaviours in this func
-            opts['specialbehaviour']()
+            opts['specialbehaviour'](rank)
