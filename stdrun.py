@@ -11,7 +11,7 @@ from inspect import getfullargspec
 #TODO implement consistent manager for tags
 
 def launch(runparameters, workfunc=lambda *args, **kwargs: None, opts={}):
-    defopts = {'stdbehaviour': True, 'specialbehaviour': workfunc}#, 'workfunc_needrawdata': False}
+    defopts = {'stdbehaviour': True, 'specialbehaviour': workfunc, 'specialbehaviour_data': {}}#, 'workfunc_needrawdata': False}
     defopts.update(opts)
     opts = defopts
 
@@ -93,20 +93,16 @@ def launch(runparameters, workfunc=lambda *args, **kwargs: None, opts={}):
                 if not rawdata:
                     break
                 #data = {k[:-1]: runparameters[k][v] for k, v in iteritems(data)}
-<<<<<<< HEAD
-                rawdata = data
-                data = {runparameterkeys[i][:-1]: runparameters[runparameterkeys[i]][data[i]] for i in range(len(data))}
-=======
                 data = {runparameterkeys[i][:-1]: runparameters[runparameterkeys[i]][rawdata[i]] for i in range(len(rawdata))}
->>>>>>> dcc82dd9143392f6c0e5333e10221034176e2724
                 if 'rawdata' in getfullargspec(workfunc)[0]:
                     workfunc(**data, rawdata=rawdata)
                 else:
                     workfunc(**data)
-<<<<<<< HEAD
-                    
-=======
->>>>>>> dcc82dd9143392f6c0e5333e10221034176e2724
         else:
             #you may consider putting special behaviours in this func
-            opts['specialbehaviour'](rank)
+            if opts['specialbehaviour_data']:
+                opts['specialbehaviour'](**opts['specialbehaviour_data'])
+            else:
+                opts['specialbehaviour']()
+
+

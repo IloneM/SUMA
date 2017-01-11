@@ -33,12 +33,6 @@ def doWork(k, dim, func, test, rawdata):
 #                     'verb_log': 100,
 #                     'verb_filenameprefix': "suma_oracle_k=%d_d=%d_f=%s_%d_" %
 #                                            (k, dim, func.__name__, test)})
-<<<<<<< HEAD
-#   if 'rot' in getfullargspec(func)[0]:
-#       ests.optimize(func, args=(1,))
-#   else:
-#       ests.optimize(func)
-=======
     ests.optimize(func, args, logger=erttools.ERTLogger(precs))
 
     comm.send((ests.logger.data(), rawdata), dest=1, tag=2)
@@ -79,5 +73,4 @@ for it in range(5):
     precs = list(range(6,13,2))
 
     stdrun.launch(runparameters, doWork, opts)
->>>>>>> dcc82dd9143392f6c0e5333e10221034176e2724
 
