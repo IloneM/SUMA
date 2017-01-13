@@ -9,6 +9,8 @@ from inspect import getfullargspec
 
 #TODO implement differenciation between worker and others with mpi communicators and broadcast (dict of workers)
 #TODO implement consistent manager for tags
+#TODO implement rather a class than a simple func?
+#TODO make launch using non blocking MPI functions in way to be able to do anything else while not computing for the run to go on
 
 def launch(runparameters, workfunc=lambda *args, **kwargs: None, opts={}):
     defopts = {'stdbehaviour': True, 'specialbehaviour': workfunc, 'specialbehaviour_data': {}}#, 'workfunc_needrawdata': False}
@@ -18,12 +20,13 @@ def launch(runparameters, workfunc=lambda *args, **kwargs: None, opts={}):
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
 
+    #if is std dict then sort it by key so that rp becomes identificable
+    if not isinstance(runparameters, OrderedDict):
+        runparameters = OrderedDict(sorted(iteritems(runparameters), key=lambda t: t[0]))
+    runparameterkeys = tuple(k for k in iterkeys(runparameters))
+
     #if it's a master
     if rank == 0:
-        #if is std dict then sort it by key so that rp becomes identificable
-        if not isinstance(runparameters, OrderedDict):
-            runparameters = OrderedDict(sorted(iteritems(runparameters), key=lambda t: t[0]))
-        runparameterkeys = tuple(k for k in iterkeys(runparameters))
         runparameterbounds = tuple(len(list(iterable)) for iterable in itervalues(runparameters))
 
         if 'runprogressfile' in opts:
@@ -80,6 +83,7 @@ def launch(runparameters, workfunc=lambda *args, **kwargs: None, opts={}):
 
     #otherwise is a worker
     else:
+        #TODO: Maybe recconsider spliting on start but rather dynamicly as e.g. mpi brain decide the role of each one. NOTE: must then also modify rank 0 behaviour (design for instance a message passed by the worker to signal if he "gets some rest or continue working")
         if callable(opts['stdbehaviour']):
             behavestd = opts['stdbehaviour']()
         else:
