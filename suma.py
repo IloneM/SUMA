@@ -75,13 +75,14 @@ class SumaSmall():
         if len(candidates) < 1:
             raise cma._Error('candidates vector cannot be empty');
         else:
-            best_seen = candidates[0];
-            score_bs = self.logproba(best_seen, projected, centered);
+            best_seen = candidates[0]
+            score_bs = self.logproba(best_seen, projected, centered)
             for i in range(1,len(candidates)):
-                if self.logproba(candidates[i], projected, centered) > score_bs:
-                    best_seen = candidates[i];
-                    score_bs = self.logproba(candidates[i]);
-            return best_seen;
+                scorei = self.logproba(candidates[i], projected, centered)
+                if  scorei > score_bs:
+                    best_seen = candidates[i]
+                    score_bs = scorei
+            return best_seen
 
     def fitsmalldist(self, solutions, projected=False, centered=False):
         fit = 0.
@@ -128,8 +129,8 @@ class Suma(owncma.CMAEvolutionStrategy):
 #TODO check if param exist
         #if 'SUMA_D' not in inopts:
         inopts['CMA_diagonal'] = True
-        inopts['CMA_const_trace'] = True
-        inopts['CMA_on'] = True
+        #inopts['CMA_const_trace'] = True
+        #inopts['CMA_on'] = True
 
         super().__init__(x0, sigma0, inopts)
 
@@ -167,9 +168,9 @@ class Suma(owncma.CMAEvolutionStrategy):
         return pop;
 
     def tell(self, solutions, function_values, check_points=None, copy=False):
-        super().tell(solutions, function_values, check_points, copy);
         self.C /= np.mean(self.C)
         self.dC = self.C
+        super().tell(solutions, function_values, check_points, copy);
         self._smallstrat.tell(self.pop_sorted[:self.sp.mu], self.mean);
         #self._smallstrat.tell(self.pop_sorted, self.mean);
 
