@@ -1,4 +1,5 @@
 *.dat
 *.swp
+*.pyc
 figure
 __pycache__
