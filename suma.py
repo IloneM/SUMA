@@ -199,6 +199,8 @@ class Suma(cma.CMAEvolutionStrategy):
        #     print(Psolutions[i])
         #    print(self._smallstrat._random_projection.dot(solutions[i]))
         #self._smallstrat.tell(Psolutions, function_values, check_points, copy);
+        self.C /= np.mean(self.C)
+        super(Suma, self).tell(solutions, function_values, check_points, copy)
         self._smallstrat.tell(self._smallstrat.ask(), function_values, check_points, copy);
         super().tell(solutions, function_values, check_points, copy);
         #TODO #notUrgent: rewrite optimize in way to call logger of smallstrat
