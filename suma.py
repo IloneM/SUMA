@@ -23,17 +23,12 @@ class SumaSmall():
         #TODO: do it better
         self.lamb = None
         self.mu = inopts['SUMA_mu']
-        self.rp = self.grp(self.d, inopts['SUMA_D'], inopts['SUMA_spc'])
-        self.trp = np.transpose(self.rp)
+
+        self.rp = None
+        self.regenrp()
         self.mean = self.rp @ x0
-        #TODO: find better way manage triangulation of C; see below
-        self.C = self.Cp = self.Cm = np.eye(self.d, dtype=float)
-        self.pp = self.pm = 1
-        self.meanp = self.meanm = [0.] * self.d
-        #TODO: must be found an fixed if possible
-        self.alpham = self.alphap = inopts['SUMA_a0']
-        self.calpham = self.calphap = 1. + inopts['SUMA_calphaeps']
-        
+
+
 #TODO does not work; must be before calling super so check if exists in inopts an if not take default instead plus Small
 #TODO EDIT better: inherit CMAOptions in way to set SUMA variables
     @staticmethod
@@ -57,17 +52,27 @@ class SumaSmall():
     @staticmethod
     #here min is better
     def mwwdist(X,Y):
-        nx, ny = (len(X), len(Y))
-        j = 0
-        U = 0
-        for i in range(nx):
-            while j< ny and X[i] >= Y[j]:
-                if X[i] == Y[i]:
-                    U+= -0.5
-                    break
-                j+= 1
-            U+= i+j
-        return abs(U - nx*(nx+1)/2 - nx*ny/2)
+        s = len(X)
+        assert s == len(Y)
+        #nx, ny = (len(X), len(Y))
+        #j = 0
+        #U = 0
+        #for i in range(nx):
+        #    while j< ny and X[i] >= Y[j]:
+        #        if X[i] == Y[i]:
+        #            U+= -0.5
+        #            break
+        #        j+= 1
+        #    U+= i+j
+        #return abs(U - nx*(nx+1)/2 - nx*ny/2)
+        Yinv = [0] * s
+        print(Y)
+        for i in range(s):
+            Yinv[Y[i]] = i
+        res = 0
+        for i in range(s):
+            res += (s-i) * abs(i-Yinv[X[i]])
+        return res
 
     @staticmethod
     def computesqrtinv(D,B):
@@ -76,27 +81,23 @@ class SumaSmall():
         idx = np.argsort(D)
         D = D[idx]
         B = B[:, idx]  # self.B[i] is a row, columns self.B[:,i] are eigenvectors
-        return dot(B / D, B.T)
+        return np.dot(B / D, B.T)
 
 
     @staticmethod
-    #here min is better
     def mwwproba(X,Y):
-        nx, ny = (len(X), len(Y))
-        j = 0
-        U = 0
-        for i in range(nx):
-            while j< ny and X[i] >= Y[j]:
-                if X[i] == Y[i]:
-                    U+= -0.5
-                    break
-                j+= 1
-            U+= i+j
-        return abs(U - nx*(nx+1)/2 - nx*ny/2)
+        return SumaSmall.mwwdist(X,Y)
     
     def regenrp(self):
-        self.rp = self.grp(self.inopts['SUMA_d'], self.inopts['SUMA_D'], self.inopts['SUMA_spc'])
+        self.rp = self.grp(self.d, self.opts['SUMA_D'], self.opts['SUMA_spc'])
         self.trp = np.transpose(self.rp)
+        self.C = self.Cp = self.Cm = np.eye(self.d, dtype=float)
+        self.pp = self.pm = 1
+        self.meanp = self.meanm = [0.] * self.d
+        #TODO: must be found an fixed if possible
+        self.alpham = self.alphap = self.opts['SUMA_a0']
+        self.calpha = 1. + self.eps
+        #TODO: find better way manage triangulation of C; see below
         
     #def logproba(self, X, C=None, mean=None):
     def logproba(self, X, C, projected=False, centered=False):
@@ -120,8 +121,11 @@ class SumaSmall():
         else:
             return 0.0
 
-    def score(X, projected=False, centered=False):
-        return self.logproba(X + self.meanp, self.Cp, projected, centered) * self.pp + self.logproba(X + self.meanm, self.Cm, projected, centered) * self.pm
+    def score(self, X, projected=False, centered=False):
+        if projected:
+            return self.logproba(X + self.meanp, self.Cp, projected, centered) * self.pp + self.logproba(X + self.meanm, self.Cm, projected, centered) * self.pm
+        else:
+            return self.logproba(self.rp @ X + self.meanp, self.Cp, True, centered) * self.pp + self.logproba(self.rp @ X + self.meanm, self.Cm, True, centered) * self.pm
 
     def foretellbest(self, candidates, projected=False, centered=False):
         if len(candidates) < 1:
@@ -152,8 +156,8 @@ class SumaSmall():
         csols = solutions @ self.trp - self.mean
 #        sols = sols[ordersols[::-1]]
 
-        pscoresol = sorted([tuple(i, self.logproba(csols[i]+self.meanp,self.Cp, True, True)) for i in range(self.lamb)], key=lambda t: t[1])
-        mscoresol = sorted([tuple(i, self.logproba(csols[i]+self.meanm,self.Cm, True, True)) for i in range(self.lamb)], key=lambda t: t[1])
+        pscoresol = sorted([(i, self.logproba(csols[i]+self.meanp,self.Cp, True, True)) for i in range(self.lamb)], key=lambda t: t[1])
+        mscoresol = sorted([(i, self.logproba(csols[i]+self.meanm,self.Cm, True, True)) for i in range(self.lamb)], key=lambda t: t[1])
         #op = sorted(csols, cmp=lambda x,y: self.logproba(x, self.Cp, True,True)-self.score(y,self.True,True))
         #om = sorted(csols, cmp=lambda x,y: self.score(x,True,True)-self.score(y,True,True))
         op = [t[0] for t in pscoresol]
@@ -188,18 +192,18 @@ class SumaSmall():
         Ccandidates = tuple((1-alpha) * self.C + alpha * self.U for alpha in alphacandidates)
         #TODO: make in const i.e multiply by 3
         #res = [0.] * len(alphacandidates)
-        res = []
+        ####res = []
 
-        for C in Ccandidates:
-            self.C = C 
-            res.append(self.fitsmalldist(csols, projected=True, centered=True))
+        ####for C in Ccandidates:
+        ####    self.C = C 
+        ####    res.append(self.fitsmalldist(csols, projected=True, centered=True))
 
-        #alpha plus is best
-        if res[0] > res[2] and res[2] > res[1]:
-            self.alpha = alphacandidates[0]
-        #alpha minus is best
-        elif res[1] > res[2] and res[2] > res[0]:
-            self.alpha = alphacandidates[1]
+        #####alpha plus is best
+        ####if res[0] > res[2] and res[2] > res[1]:
+        ####    self.alpha = alphacandidates[0]
+        #####alpha minus is best
+        ####elif res[1] > res[2] and res[2] > res[0]:
+        ####    self.alpha = alphacandidates[1]
         #else alpha remains unchanged
 
 class Suma(owncma.CMAEvolutionStrategy):
