@@ -65,19 +65,19 @@ class SumaSmall():
         #        j+= 1
         #    U+= i+j
         #return abs(U - nx*(nx+1)/2 - nx*ny/2)
-        Yinv = [0] * s
-        print(Y)
-        for i in range(s):
-            Yinv[Y[i]] = i
+        #Yinv = [0] * s
+        #print(Y)
+        #for i in range(s):
+        #    Yinv[Y[i]] = i
         res = 0
         for i in range(s):
-            res += (s-i) * abs(i-Yinv[X[i]])
+            res += (s-i) * abs(X[i]-Y[i])
         return res
 
     @staticmethod
     def computesqrtinv(D,B):
         D = D**0.5
-        assert all(isfinite(D))
+        assert all(np.isfinite(D))
         idx = np.argsort(D)
         D = D[idx]
         B = B[:, idx]  # self.B[i] is a row, columns self.B[:,i] are eigenvectors
@@ -165,7 +165,7 @@ class SumaSmall():
         #TODO: do it once
         oo = list(range(self.mu))
         p = self.mwwproba(op[:self.mu], om[:self.mu])
-        if np.rand() < p:
+        if np.random.uniform() < p:
             self.regenrp()
             return
         self.meanp = self.eps/self.mu * sum(csols[:self.mu])
@@ -182,10 +182,10 @@ class SumaSmall():
 
         self.C = (1-self.alphap-self.alpham) * self.C + self.alphap * self.Up + self.alpham * self.Um
         self.Cp = (1-self.eps) * self.C + self.eps * self.Up
-        self.Cp = self.computesqrtinv(self.eigenmeth(self.Cp))
+        self.Cp = self.computesqrtinv(*self.eigenmeth(self.Cp))
 
         self.Cm = (1+self.eps) * self.C - self.eps * self.Um
-        self.Cm = self.computesqrtinv(self.eigenmeth(self.Cm))
+        self.Cm = self.computesqrtinv(*self.eigenmeth(self.Cm))
 
         #NOTE: be careful: self.alpha must be in last pos so that C adapted with alpha is current alpha is in last pos in Ccnadidates so that the last update of self.C gets the correct value for this iteration
         alphacandidates = (min(self.alpha * self.calpha, 1), self.alpha / self.calpha, self.alpha)
