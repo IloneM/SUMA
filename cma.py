@@ -3862,7 +3862,7 @@ class CMAEvolutionStrategy(OOOptimizer):
         # dragging is problematic, but why doesn't it settle), still a bug?
         if new_injections:
             self.pop_injection_directions = self.prepare_injection_directions()
-        self.pop_sorted = []  # remove this in case pop is still needed
+        #self.pop_sorted = []  # remove this in case pop is still needed
         self._flgtelldone = True
     # end tell()
 
