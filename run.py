@@ -1,15 +1,13 @@
-from inspect import getfullargspec
+#from inspect import getfullargspec
 #from mpi4py import MPI
-import suma
-import cma
-#import stdrun
-import erttools
+import sumatricheur as st
+#import cma
+import stdrun
+#import erttools
 
-runparameters = {'ks': [5],
-                 'dims' : [50],
-                 'funcs' : [cma.fcts.cigar, cma.fcts.tablet, cma.fcts.elli, cma.fcts.diffpow],
+runparameters = {'Ds' : [50, 100, 200],
+		 'ds' : [5, 10, 20, 30, 40],
                  'tests' : range(15)}
-
 
 #runparameters = {'ks': [2, 5, 10],
 #                 'dims' : [50, 100, 500],
@@ -26,32 +24,24 @@ runparameters = {'ks': [5],
 #                            cma.fcts.rosen],
 #                    'tests' : range(15)}
 
-path = '/home/ilone/Documents/Studies/Recherche/sumapy/results/12.1.17/'
+path = '/home/ilone/SUMA-chal/results/'
 #precs = [1e-4, 1e-6, 1e-8]
-precs = list(range(6,13,2))
+#precs = list(range(6,13,2))
 
+def genpath(d,D,test):
+    return path + 'D=%d_d=%d_test=%d' % (D,d,test)
 
-def doWork(k, dim, func, test, logger):
-    if 'rot' in getfullargspec(func)[0]:
-        args = (1,)
-    else:
-        args = ()
-
-    if func.__name__ == 'rosen':
-        x0 = [0] * dim
-    else:
-        x0 = [1] * dim
-
-    print("running test %d for k=%d d=%d f=%s" % (test, k, dim, func.__name__))
-    ests = suma.Suma(x0, 0.5, {'SUMA_k': k, 'verb_disp': 0})
-    ests.optimize(func, args=args, logger=logger)
+def doWork(D, d, test):
+    print("running test %d for d=%d D=%d" % (test, d,D))
+    es = st.Suma([1] * D, 0.5, {'SUMA_d': d, 'verb_log': 0, 'verb_disp': 0, 'SUMA_nrp': 25, 'verb_filenameprefix': genpath(d,D,test)})
+    es.optimize(st.cma.fcts.ellirot)
 
 #for it in range(5):
     #opts = {'stdbehaviour': lambda: not comm.Get_rank() == 1, 'specialbehaviour': specialbehaviour}
 
-opts = {'manager': {'path': path, 'specific_runparameters': {'funcs': [f.__name__ for f in runparameters['funcs']]}, 'splitkeys': {'funcs'}}}
+#opts = {'manager': {'path': path, 'specific_runparameters': {'funcs': [f.__name__ for f in runparameters['funcs']]}, 'splitkeys': {'funcs'}}}
 
-erttools.ERTMPIWrapper(runparameters, doWork, precs, opts).launch()
+#erttools.ERTMPIWrapper(runparameters, doWork, precs, opts).launch()
 
-#stdrun.launch(runparameters, doWork, opts)
+stdrun.launch(runparameters, doWork)#, opts)
 

@@ -1,9 +1,9 @@
-import sumatricheur as st
+:mport sumatricheur as st
 import matplotlib.pyplot as plt
 import numpy as np
-import threading as th
+#import threading as th
 from math import ceil,floor
-from importlib import reload
+#from importlib import reload
 import stdrun
 
 def plot(path):
@@ -29,7 +29,7 @@ def run(tdD):
     es.optimize(st.cma.fcts.ellirot)
 
 #if __name__ == 'main':
-stdrun.launch({'tdDs': [(2,100),(5,100),(10,100),(20,100),(30,100),(2,200),(5,200),(10,200),(20,200),(30,200),(40,200)]}, run)
+#stdrun.launch({'tdDs': [(2,100),(5,100),(10,100),(20,100),(30,100),(2,200),(5,200),(10,200),(20,200),(30,200),(40,200)]}, run)
 
 #thqueue = []
 #

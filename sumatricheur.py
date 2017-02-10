@@ -99,7 +99,7 @@ class SumaSmall():
         res = []
         for rpi in range(self.nrp):
             if self.setneword:
-                newordt = sorted([(i, self.relativeProba(sortedcand[i], rpi)) for i in range(popsize)], key=lambda t: t[1])
+                newordt = sorted([(i, self.relativeProba(sortedcand[i], rpi)) for i in range(popsize)], key=lambda t: t[1], reverse=True)
                 self.neword.append([t[0] for t in newordt])
             neword = self.neword[rpi]
             #fitord = fit[neword]
@@ -222,7 +222,6 @@ class Suma(cma.CMAEvolutionStrategy):
         return [(2 ** ((self.fmax-fi)/self.dminmax) -1) for fi in fit]
 
     def relevancegeom(self, fit, popsize):
-        dminmax = fmax-fmin
         return [(2 ** (self.fmin/fi) -1) for fi in fit]
 
     @staticmethod
@@ -249,8 +248,9 @@ class Suma(cma.CMAEvolutionStrategy):
     def relevanceorderexpsoft(fit, popsize):
         return [2 ** reli -1 for reli in Suma.relevanceordersoft(None, popsize)]
 
-    def relevancemuonly(self, fit, popsize):
-        return [(1 if i < self.mu else 0) for i in range(popsize)]
+    @staticmethod
+    def relevancemuonly(fit, popsize):
+        return [(1 if i < popsize // 2 else 0) for i in range(popsize)]
 
     def perf(self, sortedcand, fit, relevance):
         #fmin = min(fit)
@@ -259,7 +259,7 @@ class Suma(cma.CMAEvolutionStrategy):
         popsize = len(fit)
 
         if self.neword is None:
-            self.newordt = sorted([(i, self.relproba(sortedcand[i])) for i in range(popsize)], key=lambda t: t[1])
+            self.newordt = sorted([(i, self.relproba(sortedcand[i])) for i in range(popsize)], key=lambda t: t[1], reverse=True)
             self.neword = [t[0] for t in self.newordt]
         neword = self.neword
         #fitord = fit[neword]
@@ -292,9 +292,6 @@ class Suma(cma.CMAEvolutionStrategy):
         #mm = sum(self.pop_sorted[-self.mu:]) / self.mu
         #vmp = mp - mm
         #Pvmp = np.dot(self._smallstrat._random_projection, vmp)
-        self.fmin = self.fit.fit[0]
-        self.fmax = self.fit.fit[-1:]
-        self.dminmax = self.fmax-self.fmin
         
         ##for f in [self.relevanceorderexphard, self.relevanceorderhard, self.relevanceordersoft, self.relevanceorderexpsoft, self.relevancemuonly]:
         ##    with open(self.opts['verb_filenameprefix'] + '_small_' + f.__name__ + '.dat', 'a') as resfilestream:
@@ -330,10 +327,12 @@ class Suma(cma.CMAEvolutionStrategy):
         #        resfilestream.write(str(self.perf(self.pop_sorted[self.neword][:self.mu], [t[1] for t in self.newordt][:self.mu], f))+ '\n')
         poptestN = 100
         poptest = np.random.randn(poptestN, self.N)
+        for i in range(poptest.shape[0]):
+            poptest[i] += self.mean
 
         self.ordft = sorted([(i, self._f(poptest[i])) for i in range(poptestN)], key=lambda t: t[1])
         self.ordf = [t[0] for t in self.ordft]
-        self.newordt = sorted([(i, self.relproba(poptest[i])) for i in range(poptestN)], key=lambda t: t[1])
+        self.newordt = sorted([(i, self.relproba(poptest[i])) for i in range(poptestN)], key=lambda t: t[1], reverse=True)
 #        self.newordt = sorted([(i, self.relproba(self.pop_sorted[i])) for i in range(self.mu)], key=lambda t: t[1])
         self.neword = [t[0] for t in self.newordt]
 
@@ -343,8 +342,11 @@ class Suma(cma.CMAEvolutionStrategy):
         #newpop = self.pop_sorted[self.neword]
         newpop = poptest[self.neword]
         newfit = [t[1] for t in self.newordt]
+        self.fmin = newfit[0]
+        self.fmax = newfit[-1]
+        self.dminmax = self.fmax-self.fmin
 
-        for f in [self.relevanceorderexphard, self.relevanceorderhard, self.relevanceordersoft, self.relevanceorderexpsoft, self.relevancemuonly, self.relevancefromproba]:
+        for f in [self.relevancearith, self.relevancegeom, self.relevanceorderexphard, self.relevanceorderexpsoft, self.relevancemuonly, self.relevancefromproba]:
             with open(self.opts['verb_filenameprefix'] + '_small_acc_big_' + f.__name__ + '.dat', 'a') as resfilestream:
                 resfilestream.write(' '.join([str(s) for s in self._smallstrat.perf(newpop, newfit, f)])+ '\n')
 
@@ -354,12 +356,15 @@ class Suma(cma.CMAEvolutionStrategy):
         #newpop = self.pop_sorted[self.neword]
         newpop = poptest[self.ordf]
         newfit = [t[1] for t in self.ordft]
+        self.fmin = newfit[0]
+        self.fmax = newfit[-1]
+        self.dminmax = self.fmax-self.fmin
 
-        for f in [self.relevanceorderexphard, self.relevanceorderhard, self.relevanceordersoft, self.relevanceorderexpsoft, self.relevancemuonly, self.relevancefromproba]:
+        for f in [self.relevancearith, self.relevancegeom, self.relevanceorderexphard, self.relevanceorderexpsoft, self.relevancemuonly]:
             with open(self.opts['verb_filenameprefix'] + '_small_acc_f_' + f.__name__ + '.dat', 'a') as resfilestream:
                 resfilestream.write(' '.join([str(s) for s in self._smallstrat.perf(newpop, newfit, f)])+ '\n')
 
-        for f in [self.relevanceorderexphard, self.relevanceorderhard, self.relevanceordersoft, self.relevanceorderexpsoft, self.relevancemuonly, self.relevancefromproba]:
+        for f in [self.relevancearith, self.relevancegeom, self.relevanceorderexphard, self.relevanceorderexpsoft, self.relevancemuonly]:
             with open(self.opts['verb_filenameprefix'] + '_big_acc_f_' + f.__name__ + '.dat', 'a') as resfilestream:
                 resfilestream.write(str(self.perf(newpop, newfit, f))+ '\n')
 
