@@ -6,8 +6,8 @@ import stdrun
 #import erttools
 
 runparameters = {'Ds' : [50, 100, 200],
-		 'ds' : [5, 10, 20, 30, 40],
-                 'tests' : range(15)}
+		 'ds' : [2, 5, 10, 20, 30, 40, 45, 46, 47, 48, 49, 50],
+                 'tests' : range(5)}
 
 #runparameters = {'ks': [2, 5, 10],
 #                 'dims' : [50, 100, 500],

@@ -15,14 +15,16 @@ class SumaSmall():
 #TODO EDIT better: inherit CMAOptions in way to set SUMA variables
 #TODO check if param exist
         suma_opts = suma_inopts;
-        self.nrp = suma_opts['SUMA_nrp']
+        self.nrp = max(suma_opts['SUMA_nrp'],2)
         self.mean = []
         self.Csi = [np.zeros(shape=(suma_opts['SUMA_d'],suma_opts['SUMA_D'])) for fakit in range(self.nrp)]
 
         cma.rotate(x0)
-        self._random_projection = [cma.rotate.dicMatrices[str(suma_opts['SUMA_D'])][:suma_opts['SUMA_d'],:]]
+        self._random_projection = [cma.rotate.dicMatrices[str(suma_opts['SUMA_D'])][-suma_opts['SUMA_d']:,:],
+                                   cma.rotate.dicMatrices[str(suma_opts['SUMA_D'])][:suma_opts['SUMA_d'],:]]
         self.mean.append(self._random_projection[0] @ x0)
-        for i in range(1,self.nrp):
+        self.mean.append(self._random_projection[1] @ x0)
+        for i in range(2,self.nrp):
             self._random_projection.append(self.grp(suma_opts['SUMA_d'], suma_opts['SUMA_D']))
             self.mean.append(self._random_projection[i] @ x0)
 
@@ -112,7 +114,9 @@ class SumaSmall():
                 cumulf += rel[i]/log(i+2, 2)
                 #cumuldistr += (2 ** (fmin/fitord[i]) -1)/log(i+2, 2)
                 #cumulf += (2 ** (fmin/fit[i]) -1)/log(i+2, 2)
-                perfval += cumuldistr / cumulf
+                if cumulf > 0:
+                    perfval += cumuldistr / cumulf
+                #perfval += cumuldistr / cumulf
             res.append(perfval / popsize)
         if self.setneword:
             self.setneword = False
@@ -132,7 +136,7 @@ class SumaSmall():
         self.neword = []
         self.setneword = True
         for i in range(self.nrp):
-            self.Csi[i] = self._random_projection[i] @ np.dot((self.bs.B / self.bs.D), self.bs.B.T) @ self._random_projection[i].T
+            self.Csi[i] = self._random_projection[i] @ self.bs.Csi @ self._random_projection[i].T
             self.mean[i] = self._random_projection[i] @ self.bs.mean
         #self.Csi = np.dot(self.B, (self.B / self.D).T)  # square root of inverse of C according to cma.py update_exponential
 
@@ -192,8 +196,8 @@ class Suma(cma.CMAEvolutionStrategy):
         
         #pop = np.matrix();
         pop = np.ndarray(shape=(number, self.N));
+        self.Csi = np.dot((self.B / self.D), self.B.T) / self.sigma_vec / self.sigma
         self._smallstrat.begin_iteration()
-        self.Csi = np.dot((self.B / self.D), self.B.T)
         self.neword = None
 
 ###        for i in range(number):
@@ -205,15 +209,23 @@ class Suma(cma.CMAEvolutionStrategy):
         #return pop;
         return super().ask_geno(number,xmean,sigma_fac)
 
-    def relproba(self, X):
+    def relproba(self, X, isproba=True):
         #renormalize in way to avoid centering effect
 #        Px = self._random_projection @ X - self.mean;
         Px = X - self.mean
         if(np.linalg.norm(Px) > 0):
-            Csx = self.Csi @ (Px / np.linalg.norm(Px));
-            return exp(-Csx.dot(Csx));
+            #Csx = self.Csi @ (Px / np.linalg.norm(Px));
+            Csx = self.Csi @ Px
+            if isproba:
+            	return exp(-Csx.dot(Csx));
+            else:
+            	return -Csx.dot(Csx);
         else:
-            return 1.;
+            #return 1.;
+            if isproba:
+            	return 1.
+            else:
+            	return 0.
         #Csx = self.Csi @ (self._random_projection @ X - self.mean);
         ##the probability evoluates as -||Csx||^2 in a guassian distrib because of exp
         #return -Csx.dot(Csx);
@@ -274,7 +286,8 @@ class Suma(cma.CMAEvolutionStrategy):
             #cumulf += (2 ** (fmin/fit[i]) -1)/log(i+2, 2)
             cumuldistr += rel[neword[i]]/log(i+2, 2)
             cumulf += rel[i]/log(i+2, 2)
-            perfval += cumuldistr / cumulf
+            if cumulf > 0:
+                perfval += cumuldistr / cumulf
         return perfval / popsize
 
     def tell(self, solutions, function_values, check_points=None, copy=False):
@@ -327,12 +340,13 @@ class Suma(cma.CMAEvolutionStrategy):
         #        resfilestream.write(str(self.perf(self.pop_sorted[self.neword][:self.mu], [t[1] for t in self.newordt][:self.mu], f))+ '\n')
         poptestN = 100
         poptest = np.random.randn(poptestN, self.N)
-        for i in range(poptest.shape[0]):
+        for i in range(poptestN):
+#            poptest[i] *= self.sigma
             poptest[i] += self.mean
 
         self.ordft = sorted([(i, self._f(poptest[i])) for i in range(poptestN)], key=lambda t: t[1])
         self.ordf = [t[0] for t in self.ordft]
-        self.newordt = sorted([(i, self.relproba(poptest[i])) for i in range(poptestN)], key=lambda t: t[1], reverse=True)
+        self.newordt = sorted([(i, self.relproba(poptest[i], False)) for i in range(poptestN)], key=lambda t: t[1], reverse=True)
 #        self.newordt = sorted([(i, self.relproba(self.pop_sorted[i])) for i in range(self.mu)], key=lambda t: t[1])
         self.neword = [t[0] for t in self.newordt]
 
@@ -342,11 +356,16 @@ class Suma(cma.CMAEvolutionStrategy):
         #newpop = self.pop_sorted[self.neword]
         newpop = poptest[self.neword]
         newfit = [t[1] for t in self.newordt]
-        self.fmin = newfit[0]
-        self.fmax = newfit[-1]
+        #if not any(newfit):
+            #print(self.newordt)
+            #print([np.linalg.norm(p-self.mean) for p in poptest])
+            #print(self.sigma)
+            #print([self.relproba(poptest[i], False) for i in range(poptestN)])
+        self.fmin = newfit[-1]
+        self.fmax = newfit[0]
         self.dminmax = self.fmax-self.fmin
 
-        for f in [self.relevancearith, self.relevancegeom, self.relevanceorderexphard, self.relevanceorderexpsoft, self.relevancemuonly, self.relevancefromproba]:
+        for f in (self.relevanceorderhard, self.relevanceordersoft, self.relevanceorderexphard, self.relevanceorderexpsoft, self.relevancemuonly):
             with open(self.opts['verb_filenameprefix'] + '_small_acc_big_' + f.__name__ + '.dat', 'a') as resfilestream:
                 resfilestream.write(' '.join([str(s) for s in self._smallstrat.perf(newpop, newfit, f)])+ '\n')
 
@@ -360,11 +379,10 @@ class Suma(cma.CMAEvolutionStrategy):
         self.fmax = newfit[-1]
         self.dminmax = self.fmax-self.fmin
 
-        for f in [self.relevancearith, self.relevancegeom, self.relevanceorderexphard, self.relevanceorderexpsoft, self.relevancemuonly]:
+        #for f in [self.relevancearith, self.relevancegeom, self.relevanceorderexphard, self.relevanceorderexpsoft, self.relevancemuonly]:
+        for f in (self.relevanceorderhard, self.relevanceordersoft, self.relevanceorderexphard, self.relevanceorderexpsoft, self.relevancemuonly):
             with open(self.opts['verb_filenameprefix'] + '_small_acc_f_' + f.__name__ + '.dat', 'a') as resfilestream:
                 resfilestream.write(' '.join([str(s) for s in self._smallstrat.perf(newpop, newfit, f)])+ '\n')
-
-        for f in [self.relevancearith, self.relevancegeom, self.relevanceorderexphard, self.relevanceorderexpsoft, self.relevancemuonly]:
             with open(self.opts['verb_filenameprefix'] + '_big_acc_f_' + f.__name__ + '.dat', 'a') as resfilestream:
                 resfilestream.write(str(self.perf(newpop, newfit, f))+ '\n')
 
